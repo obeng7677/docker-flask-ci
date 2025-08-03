@@ -30,3 +30,17 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t docker-flask-ci .
+        
+    - name: Deploy to Server via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: |
+          cd ~/docker-flask-ci
+          git pull origin main
+          docker stop docker-flask-ci || true
+          docker rm docker-flask-ci || true
+          docker build -t docker-flask-ci .
+          docker run -d --name docker-flask-ci -p 127.0.0.1:5000:5000 docker-flask-ci
